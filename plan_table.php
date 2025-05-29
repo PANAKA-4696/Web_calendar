@@ -1,105 +1,96 @@
 <?php
-$date = $_GET['date'];
-//予定追加フォームから送られてきた内容をすべて表示する
-
-include 'db_define.php';
-session_start();//セッションを利用可能にする
-
-if(isset($_GET["back"]) && ($_GET["back"] == 1)){
-    //クエリパラメータでbackが送られてきているかつ、その値が1である場合に実行
-    session_destroy();//セッションデータを消去する
-    header("Location:index.php");//カレンダーページに戻す
-    exit();//プログラム終了
-}
-
-/*
-if(!isset($_SESSION["move"]) || ($_SESSION["move"]) != 1){
-    //isset($_SESSION["move"])で$_SESSION["move"]が初期化されているかどうかを判定する
-    //値が1ではない→このページに訪れているのがおかしい
-    header("Location:index.php");//カレンダーページに戻す
-    exit();//プログラム終了
-}
-*/
-$dsn = 'mysql:dbname='.DBNAME.';host='.DBHOST.';port='.DBPORT;
-try{
-    $dbh = new PDO($dsn,DBUSER,DBPASS);
-}
-catch(PDOException $e){
-    print('DBに接続できません'.$e->getMessage());
+if(!isset($_GET['date'])){
+    header("Location: index.php"); // 日付が指定されていなければカレンダーへ
     exit();
 }
-$sql = "SELECT * FROM plan WHERE date = '$date' ORDER BY before_time ASC";//日付が選んだ日付で開始時間の昇順に並ぶようにする
-$stmt = $dbh->prepare($sql);
-$stmt->execute();//SQL文を発行
+$date = htmlspecialchars($_GET['date'], ENT_QUOTES, 'UTF-8');
+
+include 'db_define.php';
+session_start(); // エラーメッセージ表示などに使う可能性を考慮
+
+$dsn = 'mysql:dbname='.DBNAME.';host='.DBHOST.';port='.DBPORT.';charset=utf8';
 $output = '';
-while($result = $stmt->fetch(PDO::FETCH_ASSOC)){
-    $output .= '<tr>';
-    $output .= '<td>';
-    $output .= '<div class="item">';
-    $output .= '<p style="color:crimson;">予定番号:'.escTag($result["id"]).'</p>';
-    //substr($input_str, 0, -3)
-    $output .= '<p>開始時間:'.escTag(substr($result["before_time"], 0, -3)).'</p>';
-    if(isset($result["after_time"]) || ($result["after_time"])){
-        $output .= '<p>終了時間:'.escTag(substr($result["after_time"], 0, -3)).'</p>';
-    }
-    $output .= '<p>予定内容:'.escTag($result["content"]).'</p>';
-    if(isset($result["place"]) || ($result["place"])){
-        $output .= '<p>場所:'.escTag($result["place"]).'</p>';
-    }
-    if(isset($result["url"]) || ($result["url"])){
-        $output .= '<p>URL:'.escTag($result["url"]).'</p>';
-    }
-    if(isset($result["file"]) || ($result["file"])){
-        $output .= '<p>ファイル:'.escTag($result["file"]).'</p>';
-    }
-    if(isset($result["memo"]) || ($result["memo"])){
-        $output .= '<p>メモ:'.escTag($result["memo"]).'</p>';
-    }
-    //$delete = "DELETE FROM plan WHERE 'plan'.'id' = ".escTag($result["id"])."";
-    //$mtst = $dbh->prepare($delete);
-    //$output .= "<p><button onclick=".$mtst->execute();">予定を削除する</p>";
-    $output .= "<label for=\"id\"></label>";
-    $output .= "<input type=\"hidden\" name=\"id\" value=".$result["id"].">";
-    $output .= "<p><input type=\"submit\" value=\"予定内容を削除\"></p>";
+$db_error = null;
 
-    $output .= "</div>";
-    $output .= "</tr>";
-    $output .= '</td>';
-    /*
-    <label for="date"></label>
-    <input type="hidden" name="date" value="<?php echo $date; ?>">
-    <label for="id"></label>
-    <input type="hidden" name="id" value="<?php echo $result["id"]; ?>">
-    */
-}
-if($output == ''){//$outputが空→つまりまだ何も予定がない状況を考慮しておく
-    $output .= '<div class="item"><p>まだ何も予定がありません</P></div>';
-}
+try{
+    $dbh = new PDO($dsn, DBUSER, DBPASS);
+    $dbh->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+    $dbh->setAttribute(PDO::ATTR_EMULATE_PREPARES, false);
 
-function escTag($html){
-    //htmlspecialchars()の省略形の作成
-    return htmlspecialchars($html,ENT_QUOTES);
+    $sql = "SELECT * FROM plan WHERE date = :date ORDER BY before_time ASC";
+    $stmt = $dbh->prepare($sql);
+    $stmt->bindParam(':date', $date, PDO::PARAM_STR);
+    $stmt->execute();
+
+    $plans = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if (count($plans) > 0) {
+        foreach($plans as $result){
+            $output .= '<div class="plan-list-item">';
+            $output .= '<p class="plan-id">予定番号: '.htmlspecialchars($result["id"], ENT_QUOTES, 'UTF-8').'</p>';
+            $output .= '<p><strong>開始時間:</strong> '.htmlspecialchars(substr($result["before_time"], 0, 5), ENT_QUOTES, 'UTF-8').'</p>'; // HH:MM 形式
+            if(!empty($result["after_time"])){
+                $output .= '<p><strong>終了時間:</strong> '.htmlspecialchars(substr($result["after_time"], 0, 5), ENT_QUOTES, 'UTF-8').'</p>';
+            }
+            $output .= '<p><strong>予定内容:</strong> '.htmlspecialchars($result["content"], ENT_QUOTES, 'UTF-8').'</p>';
+            if(!empty($result["place"])){
+                $output .= '<p><strong>場所:</strong> '.htmlspecialchars($result["place"], ENT_QUOTES, 'UTF-8').'</p>';
+            }
+            if(!empty($result["url"])){
+                $output .= '<p><strong>URL:</strong> <a href="'.htmlspecialchars($result["url"], ENT_QUOTES, 'UTF-8').'" target="_blank" rel="noopener noreferrer">'.htmlspecialchars($result["url"], ENT_QUOTES, 'UTF-8').'</a></p>';
+            }
+            if(!empty($result["file"])){
+                // uploads/timestamp_filename.ext のような形式を想定
+                $fileName = basename($result["file"]); // パスからファイル名のみ取得
+                // 元のファイル名に戻すのは難しいので、保存されたファイル名でリンク
+                $output .= '<p><strong>ファイル:</strong> <a href="'.htmlspecialchars($result["file"], ENT_QUOTES, 'UTF-8').'" target="_blank" download>'.htmlspecialchars($fileName, ENT_QUOTES, 'UTF-8').'</a></p>';
+            }
+            if(!empty($result["memo"])){
+                $output .= '<p><strong>メモ:</strong> <br>'.nl2br(htmlspecialchars($result["memo"], ENT_QUOTES, 'UTF-8')).'</p>';
+            }
+            // 削除フォーム
+            $output .= '<form method="POST" action="delete.php" onsubmit="return confirm(\'本当にこの予定を削除しますか？ 予定番号: '.htmlspecialchars($result["id"], ENT_QUOTES, 'UTF-8').'\');" style="margin-top:10px;">';
+            $output .= '<input type="hidden" name="id" value="'.htmlspecialchars($result["id"], ENT_QUOTES, 'UTF-8').'">';
+            $output .= '<input type="hidden" name="date" value="'.$date.'">';
+            $output .= '<input type="submit" value="この予定を削除" class="delete-button">';
+            $output .= '</form>';
+            $output .= '</div>';
+        }
+    } else {
+        $output = '<div class="no-plans-message"><p>この日の予定はまだありません。</p></div>';
+    }
+
+} catch(PDOException $e){
+    error_log('DB Select Error (plan_table): ' . $e->getMessage());
+    $db_error = '予定の読み込み中にエラーが発生しました。';
+    $output = '<div class="error-message">'.$db_error.'</div>';
 }
 ?>
-
 <!DOCTYPE html>
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>予定表示</title>
+    <title><?php echo $date; ?> の予定一覧</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <main>
-        <p><a href="index.php?back=1">カレンダーページに戻る</a></p>
-        <h1><?php echo $date; ?>予定内容</h1>
-        <form method="POST" action="delete.php" enctype="multipart/form-data">
-            <label for="date"></label>
-            <input type="hidden" name="date" value="<?php echo $date; ?>">
-            <table>
-                <?php print($output); ?>
-            </table>
-        </form>
+        <div class="container mt-30">
+            <p class="back-link"><a href="index.php">カレンダーページに戻る</a></p>
+            <h1><?php echo $date; ?> の予定</h1>
+            <p><a href="plan.php?date=<?php echo $date; ?>" class="btn btn-primary" style="margin-bottom: 20px; display:inline-block; background-color: #28a745; border-color:#28a745;">この日に新しい予定を追加する</a></p>
+
+            <?php if(isset($_GET['error']) && $_GET['error'] === 'invalid_id'): ?>
+                <div class="error-message" style="background-color: #f8d7da; color: #721c24; padding: 10px; border-radius: 5px; margin-bottom:15px;">
+                    エラー: 不正なIDが指定されました。
+                </div>
+            <?php endif; ?>
+            
+            <?php print($output); ?>
+        </div>
     </main>
 </body>
 </html>

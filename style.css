@@ -1,0 +1,362 @@
+/* === 基本スタイル === */
+body {
+    font-family: 'Noto Sans', sans-serif; /* GoogleFontsを使用 */
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fa; /* 背景色を薄いグレーに */
+    color: #333; /* 基本文字色 */
+    font-size: 16px; /* 基本フォントサイズ */
+}
+
+.container {
+    width: 90%; /* 基本幅 */
+    max-width: 1200px; /* 最大幅を設定 */
+    margin-left: auto; /* 中央寄せ */
+    margin-right: auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+/* ページごとのコンテナ上部マージン調整用 */
+.mt-30 { margin-top: 30px !important; }
+.mt-50 { margin-top: 50px !important; }
+.mt-80 { margin-top: 80px !important; }
+
+/* === 見出し === */
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 0;
+    margin-bottom: 0.75em;
+    font-weight: 500; /* 少し細めに */
+    line-height: 1.2;
+    color: #343a40; /* やや濃いグレー */
+}
+
+h1 { font-size: 2.2em; }
+h2 { font-size: 1.8em; }
+h3 { font-size: 1.5em; margin-bottom: 20px; }
+h4 { font-size: 1.25em; }
+
+/* 特定の色を持つ見出し */
+h4.text-danger, .text-danger {
+    color: crimson !important;
+}
+h4.text-info, .text-info {
+    color: steelblue !important;
+}
+
+/* === リンク === */
+a {
+    color: #007bff;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+    color: #0056b3;
+}
+
+/* === テーブル (Bootstrapのスタイルをベースに調整) === */
+.table {
+    width: 100%;
+    margin-bottom: 1rem;
+    color: #212529;
+    background-color: #fff; /* テーブル背景色 */
+    border-collapse: collapse;
+}
+.table th,
+.table td {
+    padding: 0.75rem;
+    vertical-align: top;
+    border-top: 1px solid #dee2e6;
+}
+.table thead th {
+    vertical-align: bottom;
+    border-bottom: 2px solid #dee2e6;
+}
+.table-bordered {
+    border: 1px solid #dee2e6;
+}
+.table-bordered th,
+.table-bordered td {
+    border: 1px solid #dee2e6;
+}
+
+/* === フォーム要素 === */
+label {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    font-weight: bold;
+}
+label small { /* 「必須」などの注釈 */
+    font-weight: normal;
+    color: #dc3545; /* Bootstrapのdangerに近い色 */
+    margin-left: 5px;
+    font-size: 0.875em;
+}
+
+input[type="text"],
+input[type="time"],
+input[type="url"],
+input[type="file"],
+textarea {
+    display: block;
+    width: 100%;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    font-weight: 400;
+    line-height: 1.5;
+    color: #495057;
+    background-color: #fff;
+    background-clip: padding-box;
+    border: 1px solid #ced4da;
+    border-radius: 0.25rem;
+    transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    box-sizing: border-box;
+    margin-bottom: 0.5rem;
+}
+input[type="text"]:focus,
+input[type="time"]:focus,
+input[type="url"]:focus,
+input[type="file"]:focus,
+textarea:focus {
+    border-color: #80bdff;
+    outline: 0;
+    box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+
+input[type="submit"],
+button {
+    display: inline-block;
+    font-weight: 400;
+    color: #fff;
+    text-align: center;
+    vertical-align: middle;
+    cursor: pointer;
+    user-select: none;
+    background-color: #007bff;
+    border: 1px solid #007bff;
+    padding: 0.375rem 0.75rem;
+    font-size: 1rem;
+    line-height: 1.5;
+    border-radius: 0.25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+input[type="submit"]:hover,
+button:hover {
+    color: #fff;
+    background-color: #0056b3;
+    border-color: #0056b3;
+    text-decoration: none;
+}
+button.btn-link { /* リンク風ボタン */
+    font-weight: 400;
+    color: #007bff;
+    text-decoration: none;
+    background-color: transparent;
+    border: 0;
+    padding: 0;
+}
+button.btn-link:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+/* === ユーティリティ === */
+.center-block { /* tableなどブロック要素の中央寄せ */
+    margin-left: auto;
+    margin-right: auto;
+}
+.text-center {
+    text-align: center !important;
+}
+.text-right {
+    text-align: right !important;
+}
+.error-message { /* エラーメッセージ用 */
+    color: crimson;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+
+/* === index.php (カレンダー) === */
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+.calendar-header h3 {
+    margin-bottom: 0; /* h3の汎用マージンをリセット */
+}
+.calendar-nav-link {
+    font-size: 1.5em; /* ナビゲーションリンクのサイズ調整 */
+    padding: 0 10px;
+}
+.calendar-table th {
+    height: 40px;
+    text-align: center;
+    font-weight: bold;
+    background-color: #e9ecef; /* ヘッダー背景色 */
+}
+.calendar-table td {
+    height: 110px; /* 高さを少し調整 */
+    vertical-align: top;
+    padding: 8px;
+}
+.calendar-table .day-number {
+    font-size: 1.1em;
+    font-weight: bold;
+}
+.calendar-table .holiday .day-number,
+.calendar-table .holiday .holiday-name {
+    color: red;
+}
+.calendar-table .holiday .holiday-name {
+    font-size: 0.8em;
+    display: block;
+    margin-top: 2px;
+}
+.calendar-table .today {
+    background-color: #fff3cd; /* Bootstrapのwarning-lightに近い色 */
+}
+.calendar-table .today .day-number {
+    border-bottom: 2px solid orange;
+    display: inline-block;
+}
+.calendar-table th:nth-of-type(1), /* 日曜日ヘッダー */
+.calendar-table td:nth-of-type(1) .day-number,
+.calendar-table td:nth-of-type(1) .holiday-name { /* 日曜日セル */
+    color: red;
+}
+.calendar-table th:nth-of-type(7), /* 土曜日ヘッダー */
+.calendar-table td:nth-of-type(7) .day-number,
+.calendar-table td:nth-of-type(7) .holiday-name { /* 土曜日セル */
+    color: blue;
+}
+.calendar-table .actions a {
+    display: block;
+    margin-top: 5px;
+    font-size: 0.85em;
+    padding: 2px 4px;
+    border-radius: 3px;
+}
+.calendar-table .actions a:hover {
+    background-color: #e9ecef;
+    text-decoration: none;
+}
+.calendar-table .actions .add-plan {
+    color: #28a745; /* 緑色 */
+}
+.calendar-table .actions .view-plan {
+    color: #17a2b8; /* シアン色 */
+}
+
+
+/* === plan.php (予定フォーム) / confirm.php (確認画面) === */
+.form-container,
+.confirm-container {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.1);
+}
+.form-table,
+.confirm-table { /* plan.php, confirm.php の中央テーブル */
+    width: auto; /* 内容に合わせて幅を調整 */
+    /* .center-block クラスで中央寄せ */
+}
+.form-table ul,
+.confirm-table ul {
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 1.2rem;
+}
+.form-table li,
+.confirm-table li {
+    margin-bottom: 0.5rem;
+}
+.confirm-table li {
+    font-size: 1.05em; /* 確認画面のリストアイテムを少し大きく */
+}
+
+.page-actions { /* フォーム下部や完了画面のボタンコンテナ */
+    margin-top: 25px;
+    text-align: center; /* デフォルトは中央寄せ */
+}
+.page-actions.text-right { /* 右寄せの場合 */
+    text-align: right;
+}
+.page-actions button,
+.page-actions input[type="submit"] {
+    margin: 0 5px;
+}
+
+/* === complete.php (完了画面) / delete.php (削除完了画面) === */
+.status-message-container { /* 完了・削除メッセージのコンテナ */
+    text-align: center;
+}
+.status-message {
+    padding: 20px;
+    border-radius: 0.25rem;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+}
+.status-message.success {
+    border: 1px solid #c3e6cb; /* Bootstrapのsuccessに近い色 */
+    background-color: #d4edda;
+    color: #155724;
+}
+.status-message h1 { /* 完了メッセージ内のh1 */
+    font-size: 1.6em;
+    margin-bottom: 10px;
+    color: inherit; /* 親要素の色を継承 */
+}
+
+/* === plan_table.php (予定一覧) === */
+.plan-list-item {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 5px;
+    background-color: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+.plan-list-item p {
+    margin-bottom: 8px;
+    line-height: 1.6;
+}
+.plan-list-item p:last-child {
+    margin-bottom: 0;
+}
+.plan-list-item .plan-id {
+    font-weight: bold;
+    color: crimson;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+}
+.plan-list-item input[type="submit"].delete-button {
+    background-color: #dc3545; /* 削除ボタンは赤系 */
+    border-color: #dc3545;
+    color: white;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+    margin-top: 10px;
+}
+.plan-list-item input[type="submit"].delete-button:hover {
+    background-color: #c82333;
+    border-color: #bd2130;
+}
+.no-plans-message {
+    font-style: italic;
+    color: #6c757d;
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 5px;
+    text-align: center;
+}
+
+/* 戻るリンクなどの共通スタイル */
+.back-link {
+    display: inline-block;
+    margin-bottom: 15px;
+    font-size: 0.9em;
+}

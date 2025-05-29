@@ -1,205 +1,145 @@
 <?php
 session_start();
-if(isset($_POST) && ($_POST)){
-    $date = $_POST["date"];
-    $before_time = $_POST["before_time"];
-    $after_time = $_POST["after_time"];
-    $content = $_POST["content"];
-    $place = $_POST["place"];
-    $url = $_POST["url"];
-    //$file = $_POST["file"];
-    $memo = $_POST["memo"];
 
-    //セッション内にユーザーが送信してきたデータを格納しておく
-    $_SESSION["date"] = $date;
-    $_SESSION["before_time"] = $before_time;
-    $_SESSION["after_time"] = $after_time;
-    $_SESSION["content"] = $content;
-    $_SESSION["place"] = $place;
-    $_SESSION["url"] = $url;
-    //$_SESSION["file"] = $file;
-    $_SESSION["memo"] = $memo;
+// POSTデータがない場合はplan.phpにリダイレクト（日付情報があればそれも渡す）
+if(!(isset($_POST) && !empty($_POST))){
+    $redirect_date = isset($_SESSION["date"]) ? $_SESSION["date"] : (isset($_GET["date"]) ? $_GET["date"] : '');
+    if (!empty($redirect_date)) {
+        header("Location: plan.php?date=" . urlencode($redirect_date));
+    } else {
+        header("Location: plan.php"); // 日付不明ならplan.phpの初期へ
+    }
+    exit();
+}
 
-    $errors = [];//エラーがあったときに格納するための配列
-    $not_input_after = 0;//内容がないときに後で消すための処理を行うための変数
-    $not_input_plase = 0;
-    $not_input_url = 0;
-    $not_input_file = 0;
-    $not_input_memo = 0;
+// POSTされたデータをセッションに保存
+$_SESSION["date"] = $_POST["date"];
+$_SESSION["before_time"] = $_POST["before_time"];
+$_SESSION["after_time"] = $_POST["after_time"];
+$_SESSION["content"] = $_POST["content"];
+$_SESSION["place"] = $_POST["place"];
+$_SESSION["url"] = $_POST["url"];
+$_SESSION["memo"] = $_POST["memo"];
 
-    //カレンダーページに戻す
-    if(isset($_GET["back"]) && ($_GET["back"] == 1)){
-        //クエリパラメータでbackが送られてきているかつ、その値が1である場合に実行
-        session_destroy();//セッションデータを消去する
-        header("Location:index.php");//カレンダーページに戻す
-        exit();//プログラム終了
-    }
-    //予定フォーム画面に戻す
-    if(isset($_GET["back"]) && ($_GET["back"] == 2)){
-        //クエリパラメータでbackが送られてきているかつ、その値が1である場合に実行
-        session_destroy();//セッションデータを消去する
-        header("Location:plan.php?date='$date'");//予定フォームに戻す
-        exit();//プログラム終了
-    }
+// ファイル処理
+$file_display_name = 'ファイル未選択';
+if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
+    // ファイルがアップロードされた場合
+    // ここではファイル名をセッションに保存する例（実際には一時ファイルパスなどを保存し、complete.phpで移動処理）
+    $_SESSION["file_tmp_name"] = $_FILES['file']['tmp_name'];
+    $_SESSION["file_name"] = $_FILES['file']['name'];
+    $file_display_name = htmlspecialchars($_FILES['file']['name'], ENT_QUOTES, 'UTF-8');
+} else {
+    // ファイルがアップロードされなかった場合、またはエラーがあった場合
+    unset($_SESSION["file_tmp_name"]); // 念のためクリア
+    unset($_SESSION["file_name"]);
+}
 
-    //ファイルが入っているときと入っていないときの処理(生成AI使用)
-    if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-        /*
-        $tmp_name = $_FILES['file']['tmp_name'];
-        $name = $_FILES['file']['name'];
-        ファイルのアップロード処理 (例: サーバーに保存)
-        move_uploaded_file($tmp_name, 'uploads/' . $name);
-        $file_path = 'uploads/' . $name; // 保存されたファイルのパス
-        $_SESSION["file"] = $file_path;
-        */
-        $file = $_POST["file"];
-        $_SESSION["file"] = $file;
-    }else{
-        $file = '内容が記入されていません';
-        $not_input_file += 1;
-    }
 
-    //予定内容が記入されていなければエラー
-    if(strlen($content) < 1){
-        $errors["content"] = '予定内容が入力されていません';
-    }
-    //開始時間が記入されていなければエラー
-    if(strlen($before_time) < 1){
-        //strlen()→文字列の長さを返す関数
-        $errors["before_time"] = '時間が記入されていません';
-    }
+$date = htmlspecialchars($_SESSION["date"], ENT_QUOTES, 'UTF-8');
+$before_time = htmlspecialchars($_SESSION["before_time"], ENT_QUOTES, 'UTF-8');
+$after_time = htmlspecialchars($_SESSION["after_time"], ENT_QUOTES, 'UTF-8');
+$content = htmlspecialchars($_SESSION["content"], ENT_QUOTES, 'UTF-8');
+$place = htmlspecialchars($_SESSION["place"], ENT_QUOTES, 'UTF-8');
+$url = htmlspecialchars($_SESSION["url"], ENT_QUOTES, 'UTF-8');
+$memo = nl2br(htmlspecialchars(trim($_SESSION["memo"]), ENT_QUOTES, 'UTF-8'));
 
-    //内容が入っていないとき内容がないことを出力
-    if(strlen($after_time) < 1){
-        $after_time = '内容が記入されていません';
-        $not_input_after += 1;
-    }
-    if(strlen($place) < 1){
-        $place = '内容が記入されていません';
-        $not_input_plase += 1;
-    }
-    if(strlen($url) < 1){
-        $url = '内容が記入されていません';
-        $not_input_url += 1;
-    }
-    
-    /*
-    if(strlen($file) < 1){
-        $file = '内容が記入されていません';
-        $not_input_file += 1;
-    }
-    */
 
-    if(strlen($memo) < 1){
-        $memo = '内容が記入されていません';
-        $not_input_memo += 1;
-    }
+// バリデーション (plan.phpにエラーメッセージを渡すため、エラーがあればリダイレクト)
+$errors = [];
+if(empty(trim($_POST["content"]))){ // contentは必須
+    $errors["content"] = '予定内容が入力されていません';
+}
+if(empty(trim($_POST["before_time"]))){ // before_timeは必須
+    $errors["before_time"] = '開始時間が入力されていません';
+}
+// URLバリデーション (任意入力だが、入力されたら形式チェック)
+if(!empty(trim($_POST["url"])) && !filter_var(trim($_POST["url"]), FILTER_VALIDATE_URL)){
+    $errors["url"] = 'URLの形式が正しくありません。';
+}
 
-    if(count($errors) > 0){
-        //エラ(ーが一個以上ある=どこかエラーがある
-        $_SESSION["errors"] = $errors;
-        header("Location:plan.php?date=$date");//前のページに戻す
-        exit();
-    }
-    //以下確認画面を作成して表示
-    ?>
-    <!DOCTYPE html>
-    <html lang="ja">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title><?php echo $date; ?>予定追加-確認画面-</title>
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-        <link href="https://fonts.googleapis.com/css?family=Noto+Sans" rel="stylesheet">
-        <style>
-        .container {
-            font-family: 'Noto Sans', sans-serif;/*--GoogleFontsを使用--*/
-            margin-top: 50px;
-            width: 80%;
-        }
-        .center-block {
-            margin: 0 auto;
-            width: 470px;
-        }
-        .container button {
-            position: absolute;
-            right: 270px;
-            top: 590px;
-        }
-        .container h4{
-            font-weight: bold;
-            font-size: 25px;
-        }
-        .container li{
-            font-size: 15px;
-        }
-        </style>
-    </head>
-    <body>
-        <main>
-            <div class="container">
-                <p><a href="index.php?back=1">カレンダーページに戻る</a></p>
-                <p><a href="plan.php?date=<?php echo $date; ?>">予定フォーム画面に戻る</a></p>
-                <h1><?php echo $date; ?></h1>
-                <h3><?php echo $date; ?>-確認画面-</h3>
-                <table class="center-block">
+
+if(count($errors) > 0){
+    $_SESSION["errors"] = $errors;
+    // エラーがあった項目をセッションに再格納してplan.phpに戻す
+    $_SESSION["before_time"] = $_POST["before_time"];
+    $_SESSION["after_time"] = $_POST["after_time"];
+    $_SESSION["content"] = $_POST["content"];
+    $_SESSION["place"] = $_POST["place"];
+    $_SESSION["url"] = $_POST["url"];
+    $_SESSION["memo"] = $_POST["memo"];
+    // ファイル情報はセッションに残っているはず
+    header("Location:plan.php?date=" . urlencode($_POST["date"]));
+    exit();
+}
+
+?>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><?php echo $date; ?> 予定追加 -確認画面-</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <main>
+        <div class="container mt-50">
+            <p class="back-link"><a href="plan.php?date=<?php echo urlencode($date); ?>">予定フォーム画面に戻る</a></p>
+            <h1><?php echo $date; ?></h1>
+            <h3>入力内容確認</h3>
+
+            <div class="confirm-container">
+                <table class="confirm-table center-block">
                     <tr>
-                        <td>
+                        <td style="vertical-align: top;">
                             <ul>
-                                <h4 style="color:crimson;">開始時間</h4>
-                                <li><?php print(htmlspecialchars($before_time,ENT_QUOTES)); ?></li>
+                                <li><h4 class="text-danger">開始時間</h4></li>
+                                <li><?php echo !empty($before_time) ? $before_time : '未入力'; ?></li>
                             </ul>
                             <ul>
-                                <h4 style="color:steelblue;">終了時間</h4>
-                                <li><?php print(htmlspecialchars($after_time,ENT_QUOTES)); ?></li>
+                                <li><h4 class="text-info">終了時間</h4></li>
+                                <li><?php echo !empty($after_time) ? $after_time : '未入力'; ?></li>
                             </ul>
                             <ul>
-                                <h4 style="color:crimson;">予定内容</h4>
-                                <li><?php print(htmlspecialchars($content,ENT_QUOTES)); ?></li>
+                                <li><h4 class="text-danger">予定内容</h4></li>
+                                <li><?php echo !empty($content) ? $content : '未入力'; ?></li>
                             </ul>
                         </td>
-                        <td>　　　　　</td>
-                        <td>
+                        <td style="width: 50px;"></td> <td style="vertical-align: top;">
                             <ul>
-                                <h4 style="color:steelblue;">場所</h4>
-                                <li><?php print(htmlspecialchars($place,ENT_QUOTES)); ?></li>
+                                <li><h4 class="text-info">場所</h4></li>
+                                <li><?php echo !empty($place) ? $place : '未入力'; ?></li>
                             </ul>
                             <ul>
-                                <h4 style="color:steelblue;">URL</h4>
-                                <li><?php print(htmlspecialchars($url,ENT_QUOTES)); ?></li>
+                                <li><h4 class="text-info">URL</h4></li>
+                                <li>
+                                    <?php if(!empty($url)): ?>
+                                        <a href="<?php echo $url; ?>" target="_blank" rel="noopener noreferrer"><?php echo $url; ?></a>
+                                    <?php else: ?>
+                                        未入力
+                                    <?php endif; ?>
+                                </li>
                             </ul>
                             <ul>
-                                <h4 style="color:steelblue;">ファイル</h4>
-                                <li><?php print($file); ?></li>
+                                <li><h4 class="text-info">ファイル</h4></li>
+                                <li><?php echo $file_display_name; ?></li>
                             </ul>
                             <ul>
-                                <h4 style="color:steelblue;">メモ</h4>
-                                <li><?php print(nl2br(htmlspecialchars(trim($memo),ENT_QUOTES))); ?></li>
+                                <li><h4 class="text-info">メモ</h4></li>
+                                <li><?php echo !empty(trim($memo)) ? $memo : '未入力'; // trimして空かチェック ?></li>
                             </ul>
                         </td>
                     </tr>
                 </table>
-                <br>
-                <p><button onclick="location.href='complete.php'">予定追加を確定する</button></p>
+                <div class="page-actions">
+                    <button onclick="location.href='plan.php?date=<?php echo urlencode($date); ?>'" type="button" class="btn-secondary">修正する</button>
+                    <button onclick="location.href='complete.php'" type="button">この内容で登録する</button>
+                </div>
             </div>
-        </main>
-    </body>
-    </html>
-<?php
-if($not_input_after = 1){
-    $after_time = '';
-}
-if($not_input_plase = 1){
-    $place = '';
-}
-if($not_input_url = 1){
-    $url = '';
-}
-if($not_input_file = 1){
-    $file = '';
-}
-if($not_input_memo = 1){
-    $memo = '';
-}
-}
-?>
+        </div>
+    </main>
+</body>
+</html>
