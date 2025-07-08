@@ -1,13 +1,13 @@
 <?php
 session_start();
 
-// POSTデータがない場合はplan.phpにリダイレクト（日付情報があればそれも渡す）
+// POSTデータがない場合はplan.phpにリダイレクト
 if(!(isset($_POST) && !empty($_POST))){
     $redirect_date = isset($_SESSION["date"]) ? $_SESSION["date"] : (isset($_GET["date"]) ? $_GET["date"] : '');
     if (!empty($redirect_date)) {
         header("Location: plan.php?date=" . urlencode($redirect_date));
     } else {
-        header("Location: plan.php"); // 日付不明ならplan.phpの初期へ
+        header("Location: plan.php");
     }
     exit();
 }
@@ -24,17 +24,13 @@ $_SESSION["memo"] = $_POST["memo"];
 // ファイル処理
 $file_display_name = 'ファイル未選択';
 if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
-    // ファイルがアップロードされた場合
-    // ここではファイル名をセッションに保存する例（実際には一時ファイルパスなどを保存し、complete.phpで移動処理）
     $_SESSION["file_tmp_name"] = $_FILES['file']['tmp_name'];
     $_SESSION["file_name"] = $_FILES['file']['name'];
     $file_display_name = htmlspecialchars($_FILES['file']['name'], ENT_QUOTES, 'UTF-8');
 } else {
-    // ファイルがアップロードされなかった場合、またはエラーがあった場合
-    unset($_SESSION["file_tmp_name"]); // 念のためクリア
+    unset($_SESSION["file_tmp_name"]);
     unset($_SESSION["file_name"]);
 }
-
 
 $date = htmlspecialchars($_SESSION["date"], ENT_QUOTES, 'UTF-8');
 $before_time = htmlspecialchars($_SESSION["before_time"], ENT_QUOTES, 'UTF-8');
@@ -44,35 +40,29 @@ $place = htmlspecialchars($_SESSION["place"], ENT_QUOTES, 'UTF-8');
 $url = htmlspecialchars($_SESSION["url"], ENT_QUOTES, 'UTF-8');
 $memo = nl2br(htmlspecialchars(trim($_SESSION["memo"]), ENT_QUOTES, 'UTF-8'));
 
-
-// バリデーション (plan.phpにエラーメッセージを渡すため、エラーがあればリダイレクト)
+// バリデーション
 $errors = [];
-if(empty(trim($_POST["content"]))){ // contentは必須
+if(empty(trim($_POST["content"]))){
     $errors["content"] = '予定内容が入力されていません';
 }
-if(empty(trim($_POST["before_time"]))){ // before_timeは必須
+if(empty(trim($_POST["before_time"]))){
     $errors["before_time"] = '開始時間が入力されていません';
 }
-// URLバリデーション (任意入力だが、入力されたら形式チェック)
 if(!empty(trim($_POST["url"])) && !filter_var(trim($_POST["url"]), FILTER_VALIDATE_URL)){
     $errors["url"] = 'URLの形式が正しくありません。';
 }
 
-
 if(count($errors) > 0){
     $_SESSION["errors"] = $errors;
-    // エラーがあった項目をセッションに再格納してplan.phpに戻す
     $_SESSION["before_time"] = $_POST["before_time"];
     $_SESSION["after_time"] = $_POST["after_time"];
     $_SESSION["content"] = $_POST["content"];
     $_SESSION["place"] = $_POST["place"];
     $_SESSION["url"] = $_POST["url"];
     $_SESSION["memo"] = $_POST["memo"];
-    // ファイル情報はセッションに残っているはず
     header("Location:plan.php?date=" . urlencode($_POST["date"]));
     exit();
 }
-
 ?>
 <!DOCTYPE html>
 <html lang="ja">
@@ -80,7 +70,6 @@ if(count($errors) > 0){
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $date; ?> 予定追加 -確認画面-</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -129,7 +118,7 @@ if(count($errors) > 0){
                             </ul>
                             <ul>
                                 <li><h4 class="text-info">メモ</h4></li>
-                                <li><?php echo !empty(trim($memo)) ? $memo : '未入力'; // trimして空かチェック ?></li>
+                                <li><?php echo !empty(trim($memo)) ? $memo : '未入力'; ?></li>
                             </ul>
                         </td>
                     </tr>

@@ -10,28 +10,27 @@ if(isset($_GET['ym'])){
     $ym = date('Y-m');
 }
 
-//タイムスタンプ(どの時刻を基準にするか)を作成し、フォーマットをチェックする
+//タイムスタンプを作成し、フォーマットをチェックする
 $timestamp = strtotime($ym . '-01');
-if($timestamp === false){//エラー対策として形式チェックを追加
-    //falseが返ってきたときは、現在の年月・タイムスタンプを取得
+if($timestamp === false){
     $ym = date('Y-m');
     $timestamp = strtotime($ym . '-01');
 }
 
-//今月の日付フォーマット 例) 2020-10-2
-$today_date = date('Y-m-j'); // 変数名を変更 (todayクラスとの混同を避けるため)
+//今日の日付 Y-m-j形式
+$today = date('Y-m-j');
 
 //カレンダーのタイトルを作成 例) 2020年10月
 $html_title =date('Y年n月', $timestamp);
 
-//前月・次月の年月を取得
+//前月・次月の年月を取得 (★ここを修正しました★)
 $prev = date('Y-m', strtotime('-1 month', $timestamp));
 $next = date('Y-m', strtotime('+1 month', $timestamp));
 
 //該当月の日数を取得
 $day_count = date('t', $timestamp);
 
-//1日が何曜日か (0:日曜日, 1:月曜日, ..., 6:土曜日)
+//1日が何曜日か (0:日〜6:土)
 $youbi = date('w', $timestamp);
 
 //カレンダー作成の準備
@@ -41,68 +40,99 @@ $week = '';
 //第1週目：空のセルを追加
 $week .= str_repeat('<td></td>', $youbi);
 
-$holidays = [ // 簡単な祝日リスト（年によって変動するものは別途対応が必要）
-    '01-01' => '元日',
-    '02-11' => '建国記念の日',
-    '02-23' => '天皇誕生日',
-    // '03-20' or '03-21' => '春分の日', (要計算)
-    '04-29' => '昭和の日',
-    '05-03' => '憲法記念日',
-    '05-04' => 'みどりの日',
-    '05-05' => 'こどもの日',
-    // '07-xx' => '海の日', (要計算 - 7月第3月曜日)
-    '08-11' => '山の日',
-    // '09-xx' => '敬老の日', (要計算 - 9月第3月曜日)
-    // '09-22' or '09-23' => '秋分の日', (要計算)
-    // '10-xx' => 'スポーツの日', (要計算 - 10月第2月曜日)
-    '11-03' => '文化の日',
-    '11-23' => '勤労感謝の日',
-];
-// 注意: 成人の日、春分の日、秋分の日、海の日、敬老の日、スポーツの日は年によって日付が変動するため、
-// 正確な祝日表示にはより複雑なロジックまたは外部ライブラリが必要です。
-// ここでは固定日のみを簡易的に扱います。
-
 for($day = 1; $day <= $day_count; $day++, $youbi++){
-    $current_date_str = $ym . '-' . sprintf('%02d', $day); // YYYY-MM-DD 形式
-    $month_day_str = sprintf('%02d-%02d', date('m', strtotime($current_date_str)), $day); // MM-DD 形式
+    $date = $ym . '-' . $day; // Y-m-j 形式
+    $date_plus = $ym . '-' . sprintf('%02d', $day); // Y-m-d 形式
 
+    // 各日付のクラスと祝日名を初期化
     $td_class = [];
-    if($today_date == $ym . '-' . $day){ // $current_date_str と比較しても良い
+    $holiday_name = '';
+
+    // 今日の日付に 'today' クラスを付与
+    if($today == $date){
         $td_class[] = 'today';
     }
 
-    $holiday_name = '';
-    if (array_key_exists($month_day_str, $holidays)) {
+    // ★★★ あなたが作成した祝日判定ロジック ★★★
+    if(substr($date_plus, -5) == '01-01'){
         $td_class[] = 'holiday';
-        $holiday_name = $holidays[$month_day_str];
-    }
-    // 日曜日の場合は holiday クラスを追加 (CSSで文字色を赤にするため)
-    if ($youbi % 7 == 0) {
-        // $td_class[] = 'sunday'; // CSSで nth-of-type(1) で指定しているので不要かも
-    }
-    // 土曜日の場合
-    if ($youbi % 7 == 6) {
-        // $td_class[] = 'saturday'; // CSSで nth-of-type(7) で指定しているので不要かも
+        $holiday_name = '元日';
+    }elseif(substr($date_plus, 0, 7) == date('Y-01', $timestamp) && count($weeks) == 1 && date('w', strtotime($date_plus)) == 1){
+        $td_class[] = 'holiday';
+        $holiday_name = '成人の日';
+    }elseif(substr($date_plus, -5) == '02-11'){
+        $td_class[] = 'holiday';
+        $holiday_name = '建国記念日';
+    }elseif(substr($date_plus, -5) == '02-23'){
+        $td_class[] = 'holiday';
+        $holiday_name = '天皇誕生日';
+    }elseif(substr($date_plus, -5) == '03-20' || substr($date_plus, -5) == '03-21'){ // 春分の日
+        if(substr($date_plus, -5) == '03-20'){ // 仮
+             $td_class[] = 'holiday';
+             $holiday_name = '春分の日';
+        }
+    }elseif(substr($date_plus, -5) == '04-29'){
+        $td_class[] = 'holiday';
+        $holiday_name = '昭和の日';
+    }elseif(substr($date_plus, -5) == '05-03'){
+        $td_class[] = 'holiday';
+        $holiday_name = '憲法記念日';
+    }elseif(substr($date_plus, -5) == '05-04'){
+        $td_class[] = 'holiday';
+        $holiday_name = 'みどりの日';
+    }elseif(substr($date_plus, -5) == '05-05'){
+        $td_class[] = 'holiday';
+        $holiday_name = 'こどもの日';
+    }elseif(substr($date_plus, 0, 7) == date('Y-07', $timestamp) && count($weeks) == 2 && date('w', strtotime($date_plus)) == 1){
+        $td_class[] = 'holiday';
+        $holiday_name = '海の日';
+    }elseif(substr($date_plus, -5) == '08-11'){
+        $td_class[] = 'holiday';
+        $holiday_name = '山の日';
+    }elseif(substr($date_plus, 0, 7) == date('Y-09', $timestamp) && count($weeks) == 2 && date('w', strtotime($date_plus)) == 1){
+        $td_class[] = 'holiday';
+        $holiday_name = '敬老の日';
+    }elseif(substr($date_plus, -5) == '09-22' || substr($date_plus, -5) == '09-23'){ // 秋分の日
+        if(substr($date_plus, -5) == '09-23'){ // 仮
+             $td_class[] = 'holiday';
+             $holiday_name = '秋分の日';
+        }
+    }elseif(substr($date_plus, 0, 7) == date('Y-10', $timestamp) && count($weeks) == 1 && date('w', strtotime($date_plus)) == 1){
+        $td_class[] = 'holiday';
+        $holiday_name = 'スポーツの日';
+    }elseif(substr($date_plus, -5) == '11-03'){
+        $td_class[] = 'holiday';
+        $holiday_name = '文化の日';
+    }elseif(substr($date_plus, -5) == '11-23'){
+        $td_class[] = 'holiday';
+        $holiday_name = '勤労感謝の日';
     }
 
 
-    $week .= '<td class="' . implode(' ', $td_class) . '">';
+    // class属性を生成
+    $class_str = implode(' ', $td_class);
+    $week .= '<td class="' . $class_str . '">';
+
+    // 日付と祝日名を表示
     $week .= '<div class="day-number">' . $day . '</div>';
     if (!empty($holiday_name)) {
         $week .= '<div class="holiday-name">' . htmlspecialchars($holiday_name, ENT_QUOTES) . '</div>';
     }
+
+    // 「追加」「予定」のリンクを表示
     $week .= '<div class="actions">';
-    $week .= '<a href="plan.php?date='.$current_date_str.'" class="add-plan">追加</a>';
-    $week .= '<a href="plan_table.php?date='.$current_date_str.'" class="view-plan">予定</a>';
+    $week .= '<a href="plan.php?date='.$date_plus.'" class="add-plan">追加</a>';
+    $week .= '<a href="plan_table.php?date='.$date_plus.'" class="view-plan">予定</a>';
     $week .= '</div>';
     $week .= '</td>';
 
-    if($youbi % 7 == 6 || $day == $day_count){//週終わり、月終わりの場合
-        if($day == $day_count){//月の最終日、空のセルを追加
+    // 週終わり、または月終わりの処理
+    if($youbi % 7 == 6 || $day == $day_count){
+        if($day == $day_count){
             $week .= str_repeat('<td></td>', 6 - ($youbi % 7));
         }
         $weeks[] = '<tr>' . $week . '</tr>';
-        $week = '';//weekをリセット
+        $week = '';
     }
 }
 ?>
@@ -112,7 +142,6 @@ for($day = 1; $day <= $day_count; $day++, $youbi++){
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PHPカレンダー</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -137,7 +166,7 @@ for($day = 1; $day <= $day_count; $day++, $youbi++){
             </thead>
             <tbody>
             <?php
-                foreach ($weeks as $w) { // 変数名を $week から $w に変更
+                foreach ($weeks as $w) {
                     echo $w;
                 }
             ?>

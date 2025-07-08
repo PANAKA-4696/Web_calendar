@@ -14,15 +14,13 @@ $errors = isset($_SESSION["errors"]) ? $_SESSION["errors"] : [];
 
 // カレンダーページに戻る処理
 if(isset($_GET["back"]) && $_GET["back"] == 1){
-    // セッションデータを消去する前に、必要なエラー情報などを保持するか検討
-    // 今回は単純に消去
-    $_SESSION = array(); //セッションの中身をすべて削除
-    if (ini_get("session.use_cookies")) { //クッキーを使っているか確認
+    $_SESSION = array();
+    if (ini_get("session.use_cookies")) {
         $params = session_get_cookie_params();
         setcookie(session_name(), '', time() - 42000,
             $params["path"], $params["domain"],
             $params["secure"], $params["httponly"]
-        ); //クッキーを削除
+        );
     }
     session_destroy();
     header("Location:index.php");
@@ -39,7 +37,6 @@ unset($_SESSION["before_time"], $_SESSION["after_time"], $_SESSION["content"], $
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?php echo $date; ?> 予定フォーム</title>
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <link href="https://fonts.googleapis.com/css?family=Noto+Sans:400,700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
@@ -53,7 +50,7 @@ unset($_SESSION["before_time"], $_SESSION["after_time"], $_SESSION["content"], $
             <div class="form-container">
                 <?php
                 if(count($errors) > 0){
-                    echo '<div class="error-messages-container">'; // エラーメッセージコンテナ
+                    echo '<div class="error-messages-container">';
                     foreach($errors as $error){
                         echo '<p class="error-message">'.htmlspecialchars($error, ENT_QUOTES, 'UTF-8').'</p>';
                     }
